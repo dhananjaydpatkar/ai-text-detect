@@ -21,7 +21,7 @@ import torch
 import numpy as np
 
 # POS tags to exclude from masking (coarse)
-EXCLUDE_POS = {"VERB", "AUX", "ADP", "DET", "PRON", "PART", "INTJ"}
+EXCLUDE_POS = {"AUX", "ADP", "DET", "PRON", "PART", "INTJ"}
 
 
 def load_models(bert_model_name: str = "bert-base-uncased"):
