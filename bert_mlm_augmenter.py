@@ -21,7 +21,7 @@ import torch
 import numpy as np
 
 # POS tags to exclude from masking (coarse)
-EXCLUDE_POS = {"AUX", "ADP", "DET", "PRON", "PART", "INTJ"}
+EXCLUDE_POS = { "ADP", "DET", "INTJ"}
 
 
 def load_models(bert_model_name: str = "bert-base-uncased"):
@@ -268,6 +268,8 @@ def main():
 
     results = iterate_text(args.text, nlp, tokenizer, model, args.iterations, args.mask_prob)
 
+    morph_scores = []
+    sem_scores = []
     for i, item in enumerate(results, start=1):
         # item is (generated_text, masked_info, morph_similarity, sem_similarity)
         res, meta, morph_sim, sem_sim = item
@@ -280,6 +282,34 @@ def main():
             print("masked tokens (spaCy index:word):", ", ".join(f"{idx}:{word}" for idx, word in meta))
         print(f"morphological similarity to original: {morph_sim}%")
         print(f"semantic similarity to original: {sem_sim}%")
+        try:
+            morph_scores.append(float(morph_sim))
+        except Exception:
+            pass
+        try:
+            sem_scores.append(float(sem_sim))
+        except Exception:
+            pass
+
+    # Summary statistics
+    if morph_scores or sem_scores:
+        print("\n=== Summary statistics across iterations ===")
+        if morph_scores:
+            avg_morph = round(float(np.mean(morph_scores)), 2)
+            med_morph = round(float(np.median(morph_scores)), 2)
+            p90_morph = round(float(np.percentile(morph_scores, 90)), 2)
+            print(f"Morphological similarity — average: {avg_morph}%, median: {med_morph}%, p90: {p90_morph}%")
+        else:
+            print("Morphological similarity — no scores to summarize")
+
+        if sem_scores:
+            avg_sem = round(float(np.mean(sem_scores)), 2)
+            med_sem = round(float(np.median(sem_scores)), 2)
+            p90_sem = round(float(np.percentile(sem_scores, 90)), 2)
+            p75_sem = round(float(np.percentile(sem_scores, 75)), 2)
+            print(f"Semantic similarity — average: {avg_sem}%, median: {med_sem}%, p90: {p90_sem}%, p75: {p75_sem}%")
+        else:
+            print("Semantic similarity — no scores to summarize")
 
 
 if __name__ == "__main__":
